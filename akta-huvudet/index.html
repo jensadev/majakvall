@@ -1,0 +1,459 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Akta huvudet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Nunito:wght@400;700;800&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+  /* Layout: spelplanen till vänster, en smal kontrollpanel till höger som staplas under på smal skärm.
+     Ett enda medvetet utseende (natthimmel med hagel), samma i ljust och mörkt tema. */
+  :root {
+    --sky-top: #1d1b4b;
+    --sky-low: #3b2a6b;
+    --ground: #2a6b4f;
+    --ink: #f3efff;
+    --muted: #b7b0d9;
+    --panel: #26234f;
+    --line: #463f86;
+    --sun: #ffc93c;
+    --apple: #ff5a5f;
+    --stone: #c9c4e0;
+    --display: "Bungee", "Impact", system-ui, sans-serif;
+    --body: "Nunito", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+    color-scheme: dark;
+  }
+  html, body { background: var(--sky-top); color: var(--ink); }
+  body {
+    font-family: var(--body);
+    font-size: 15px;
+    line-height: 1.5;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    padding-block: 20px 32px;
+  }
+  .wrap { max-width: 1040px; margin: 0 auto; display: grid; gap: 16px; }
+  header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 16px; }
+  h1 {
+    font-family: var(--display);
+    font-weight: 400;
+    font-size: clamp(28px, 6vw, 44px);
+    line-height: 1;
+    margin: 0;
+    color: var(--sun);
+    letter-spacing: 0.01em;
+    text-wrap: balance;
+  }
+  header p { margin: 0; color: var(--muted); }
+
+  .layout { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 16px; align-items: start; }
+  @media (max-width: 760px) { .layout { grid-template-columns: minmax(0, 1fr); } }
+
+  .stage {
+    position: relative;
+    border-radius: 14px;
+    overflow: hidden;
+    border: 2px solid var(--line);
+    background: var(--sky-low);
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  .stage:focus-visible { outline: 3px solid var(--sun); outline-offset: 3px; }
+  canvas { display: block; width: 100%; height: auto; aspect-ratio: 4 / 3; max-width: 100%; }
+
+  .overlay {
+    position: absolute; inset: 0;
+    display: grid; place-content: center; justify-items: center; gap: 10px;
+    text-align: center; padding: 20px;
+    background: rgba(18, 16, 48, 0.72);
+  }
+  .overlay h2 { font-family: var(--display); font-weight: 400; font-size: clamp(22px, 5vw, 36px); margin: 0; color: var(--sun); }
+  .overlay p { margin: 0; max-width: 34ch; }
+  .overlay .big { font-family: var(--mono); font-size: 28px; color: var(--ink); }
+  .overlay .hint { color: var(--muted); font-size: 13px; }
+
+  aside { display: grid; gap: 12px; min-width: 0; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px; display: grid; gap: 10px; min-width: 0; }
+  .card h3 { margin: 0; font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); font-weight: 800; }
+
+  .keys { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .key {
+    border: 2px solid var(--line); border-radius: 10px; padding: 10px 8px;
+    text-align: center; font-weight: 800; transition: background 60ms, color 60ms, border-color 60ms;
+  }
+  .key span { display: block; font-size: 26px; line-height: 1; }
+  .key.on { background: var(--sun); color: #1d1b4b; border-color: var(--sun); }
+  .last { font-family: var(--mono); font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
+  .last b { color: var(--ink); font-weight: 500; }
+
+  .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .stat { display: grid; gap: 2px; }
+  .stat small { color: var(--muted); font-size: 12px; }
+  .stat strong { font-family: var(--mono); font-size: 22px; font-variant-numeric: tabular-nums; font-weight: 500; }
+
+  label { display: grid; gap: 4px; font-size: 14px; }
+  label .row { display: flex; justify-content: space-between; gap: 8px; }
+  label output { font-family: var(--mono); color: var(--sun); font-variant-numeric: tabular-nums; }
+  input[type=range] { width: 100%; accent-color: var(--sun); }
+
+  ol { margin: 0; padding-left: 20px; display: grid; gap: 4px; color: var(--muted); }
+  ol b { color: var(--ink); }
+
+  button {
+    font: inherit; font-weight: 800; cursor: pointer;
+    background: transparent; color: var(--ink);
+    border: 2px solid var(--line); border-radius: 10px; padding: 8px 12px;
+  }
+  button:hover { border-color: var(--sun); }
+  button:focus-visible { outline: 3px solid var(--sun); outline-offset: 2px; }
+
+  @media (prefers-reduced-motion: reduce) { .key { transition: none; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Akta huvudet</h1>
+    <p>Gå åt vänster och höger och undvik hagelstenarna. Fånga äpplen för extrapoäng.</p>
+  </header>
+
+  <div class="layout">
+    <div class="stage" id="stage" tabindex="0" aria-label="Spelplan. Styr med vänster- och högerpil.">
+      <canvas id="game" width="640" height="480"></canvas>
+      <div class="overlay" id="overlay">
+        <h2 id="ov-title">Klicka här först</h2>
+        <p id="ov-text">Spelet måste vara markerat för att ta emot tangenter från fruktkontrollen.</p>
+        <div class="big" id="ov-score" hidden></div>
+        <p class="hint" id="ov-hint">Tryck sedan på vänster eller höger (eller rör en frukt) för att starta.</p>
+      </div>
+    </div>
+
+    <aside>
+      <section class="card" aria-label="Tangenter">
+        <h3>Vad spelet tar emot</h3>
+        <div class="keys">
+          <div class="key" id="k-left"><span>←</span>vänster</div>
+          <div class="key" id="k-right"><span>→</span>höger</div>
+        </div>
+        <div class="last">Senaste tangent: <b id="last-key">ingen än</b></div>
+      </section>
+
+      <section class="card" aria-label="Poäng">
+        <h3>Poäng</h3>
+        <div class="stats">
+          <div class="stat"><small>Nu</small><strong id="s-now">0</strong></div>
+          <div class="stat"><small>Rekord</small><strong id="s-best">0</strong></div>
+        </div>
+      </section>
+
+      <section class="card" aria-label="Inställningar">
+        <h3>Inställningar</h3>
+        <label for="set-rain"><span class="row">Hagelmängd <output id="o-rain">5</output></span>
+          <input type="range" id="set-rain" min="1" max="10" step="1" value="5"></label>
+        <label for="set-fall"><span class="row">Fallhastighet <output id="o-fall">5</output></span>
+          <input type="range" id="set-fall" min="1" max="10" step="1" value="5"></label>
+        <label for="set-move"><span class="row">Gångfart <output id="o-move">5</output></span>
+          <input type="range" id="set-move" min="1" max="10" step="1" value="5"></label>
+        <button type="button" id="back">Tillbaka till spelet</button>
+      </section>
+
+      <section class="card" aria-label="Så kopplar du">
+        <h3>Så kopplar du</h3>
+        <ol>
+          <li>Koppla brädan till datorn med USB.</li>
+          <li>Kläm fast en frukt på varje touchplatta.</li>
+          <li>Starta om brädan så att den kalibrerar med frukterna på.</li>
+          <li><b>Klicka på spelplanen</b> och rör en frukt.</li>
+        </ol>
+      </section>
+    </aside>
+  </div>
+</div>
+
+<script>
+(() => {
+  const W = 640, H = 480, GROUND = 432;
+  const canvas = document.getElementById('game');
+  const ctx = canvas.getContext('2d');
+  const stage = document.getElementById('stage');
+  const ov = {
+    root: document.getElementById('overlay'),
+    title: document.getElementById('ov-title'),
+    text: document.getElementById('ov-text'),
+    score: document.getElementById('ov-score'),
+    hint: document.getElementById('ov-hint'),
+  };
+  const ui = {
+    left: document.getElementById('k-left'),
+    right: document.getElementById('k-right'),
+    last: document.getElementById('last-key'),
+    now: document.getElementById('s-now'),
+    best: document.getElementById('s-best'),
+  };
+
+  // Inställningar från reglagen (1 till 10, 5 är normalt)
+  const settings = { rain: 5, fall: 5, move: 5 };
+  for (const name of ['rain', 'fall', 'move']) {
+    const input = document.getElementById('set-' + name);
+    const out = document.getElementById('o-' + name);
+    const update = () => { settings[name] = Number(input.value); out.textContent = input.value; };
+    input.addEventListener('input', update);
+    update();
+  }
+  document.getElementById('back').addEventListener('click', () => stage.focus());
+
+  let best = 0;
+  try { best = Number(localStorage.getItem('akta-huvudet-best')) || 0; } catch (e) {}
+  ui.best.textContent = best;
+
+  // Spelets tillstånd: 'ready', 'playing', 'over'
+  let state = 'ready';
+  let focused = false;
+  let overAt = 0;
+  const held = { left: false, right: false };
+  const touchHeld = { left: false, right: false };
+  let player, things, spawnIn, elapsed, score, apples, facing;
+
+  function reset() {
+    player = { x: W / 2, w: 52, h: 46 };
+    things = [];
+    spawnIn = 0.6;
+    elapsed = 0;
+    score = 0;
+    apples = 0;
+    facing = 0;
+  }
+  reset();
+
+  // ---------- Tangenter ----------
+  const LEFT = ['ArrowLeft', 'a', 'A'];
+  const RIGHT = ['ArrowRight', 'd', 'D'];
+
+  function setKey(e, down) {
+    const isLeft = LEFT.includes(e.key), isRight = RIGHT.includes(e.key);
+    if (down) ui.last.textContent = e.key === ' ' ? 'mellanslag' : e.key;
+    if (!isLeft && !isRight && e.key !== ' ' && e.key !== 'Enter') return;
+    e.preventDefault();
+    if (isLeft) held.left = down;
+    if (isRight) held.right = down;
+    if (down && !e.repeat) tryStart();
+  }
+  window.addEventListener('keydown', e => setKey(e, true));
+  window.addEventListener('keyup', e => setKey(e, false));
+
+  // Pek: håll på vänster eller höger halva av spelplanen
+  function pointerSide(e) {
+    const r = canvas.getBoundingClientRect();
+    return (e.clientX - r.left) < r.width / 2 ? 'left' : 'right';
+  }
+  stage.addEventListener('pointerdown', e => {
+    stage.focus();
+    if (e.pointerType !== 'mouse') {
+      const side = pointerSide(e);
+      touchHeld[side] = true;
+      stage.setPointerCapture(e.pointerId);
+    }
+    tryStart();
+  });
+  const releaseTouch = () => { touchHeld.left = false; touchHeld.right = false; };
+  stage.addEventListener('pointerup', releaseTouch);
+  stage.addEventListener('pointercancel', releaseTouch);
+
+  stage.addEventListener('focus', () => { focused = true; showOverlay(); });
+  stage.addEventListener('blur', () => {
+    focused = false;
+    held.left = held.right = false;
+    showOverlay();
+  });
+  window.addEventListener('blur', () => { held.left = held.right = false; });
+
+  function tryStart() {
+    if (!focused) return;
+    if (state === 'ready' || (state === 'over' && performance.now() - overAt > 900)) {
+      reset();
+      state = 'playing';
+      showOverlay();
+    }
+  }
+
+  function showOverlay() {
+    const o = ov;
+    o.score.hidden = true;
+    if (!focused) {
+      o.root.hidden = false;
+      o.title.textContent = state === 'playing' ? 'Pausat' : 'Klicka här först';
+      o.text.textContent = 'Spelet måste vara markerat för att ta emot tangenter från fruktkontrollen.';
+      o.hint.textContent = state === 'playing' ? 'Klicka på spelplanen för att fortsätta.' : 'Tryck sedan på vänster eller höger (eller rör en frukt) för att starta.';
+      return;
+    }
+    if (state === 'playing') { o.root.hidden = true; return; }
+    o.root.hidden = false;
+    if (state === 'ready') {
+      o.title.textContent = 'Redo?';
+      o.text.textContent = 'Rör en frukt eller tryck på en piltangent.';
+      o.hint.textContent = 'Vänster frukt = ←   Höger frukt = →';
+    } else {
+      o.title.textContent = 'Träff!';
+      o.text.textContent = apples === 1 ? 'Du fångade 1 äpple.' : 'Du fångade ' + apples + ' äpplen.';
+      o.score.hidden = false;
+      o.score.textContent = Math.floor(score) + ' poäng';
+      o.hint.textContent = 'Rör en frukt igen för att spela en gång till.';
+    }
+  }
+  showOverlay();
+
+  // ---------- Spelloop ----------
+  function spawn() {
+    const isApple = Math.random() < 0.12;
+    const r = isApple ? 13 : 9 + Math.random() * 9;
+    const base = 120 + settings.fall * 28;
+    things.push({
+      type: isApple ? 'apple' : 'stone',
+      x: r + Math.random() * (W - 2 * r),
+      y: -r,
+      r,
+      vy: base * (0.8 + Math.random() * 0.4) * (1 + elapsed * 0.02),
+      spin: Math.random() * Math.PI,
+    });
+  }
+
+  function update(dt) {
+    elapsed += dt;
+    score += dt * 10;
+
+    const left = held.left || touchHeld.left;
+    const right = held.right || touchHeld.right;
+    const dir = (right ? 1 : 0) - (left ? 1 : 0);
+    const speed = 160 + settings.move * 40;
+    player.x += dir * speed * dt;
+    player.x = Math.max(player.w / 2, Math.min(W - player.w / 2, player.x));
+    if (dir) facing = dir;
+
+    spawnIn -= dt;
+    if (spawnIn <= 0) {
+      spawn();
+      const perSecond = (0.8 + settings.rain * 0.55) * (1 + elapsed * 0.015);
+      spawnIn = 1 / perSecond;
+    }
+
+    const px = player.x - player.w / 2, py = GROUND - player.h;
+    for (const t of things) {
+      t.y += t.vy * dt;
+      t.spin += dt * 2;
+      const cx = Math.max(px, Math.min(t.x, px + player.w));
+      const cy = Math.max(py, Math.min(t.y, GROUND));
+      const hit = (t.x - cx) ** 2 + (t.y - cy) ** 2 < (t.r * 0.85) ** 2;
+      if (hit) {
+        if (t.type === 'apple') { apples++; score += 50; t.gone = true; }
+        else { gameOver(); return; }
+      }
+      if (t.y - t.r > GROUND) t.gone = true;
+    }
+    things = things.filter(t => !t.gone);
+  }
+
+  function gameOver() {
+    state = 'over';
+    overAt = performance.now();
+    const s = Math.floor(score);
+    if (s > best) {
+      best = s;
+      ui.best.textContent = best;
+      try { localStorage.setItem('akta-huvudet-best', String(best)); } catch (e) {}
+    }
+    showOverlay();
+  }
+
+  // ---------- Ritning ----------
+  const stars = Array.from({ length: 40 }, () => ({ x: Math.random() * W, y: Math.random() * (GROUND - 80), s: Math.random() * 1.6 + 0.4 }));
+
+  function drawBackground() {
+    const g = ctx.createLinearGradient(0, 0, 0, GROUND);
+    g.addColorStop(0, '#1d1b4b');
+    g.addColorStop(1, '#4a3380');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = 'rgba(243, 239, 255, 0.6)';
+    for (const s of stars) ctx.fillRect(s.x, s.y, s.s, s.s);
+    ctx.fillStyle = '#2a6b4f';
+    ctx.fillRect(0, GROUND, W, H - GROUND);
+    ctx.fillStyle = '#3c8c66';
+    ctx.fillRect(0, GROUND, W, 6);
+  }
+
+  function drawPlayer() {
+    const x = player.x, w = player.w, h = player.h, top = GROUND - h;
+    ctx.fillStyle = '#ffc93c';
+    ctx.beginPath();
+    ctx.roundRect(x - w / 2, top, w, h, [22, 22, 8, 8]);
+    ctx.fill();
+    // ögon som tittar åt det håll man går
+    const look = facing * 3;
+    for (const ex of [-10, 10]) {
+      ctx.fillStyle = '#fff';
+      ctx.beginPath(); ctx.arc(x + ex, top + 17, 7, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#1d1b4b';
+      ctx.beginPath(); ctx.arc(x + ex + look, top + 15, 3.2, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.fillStyle = '#e0a21f';
+    ctx.fillRect(x - 8, top + 31, 16, 3);
+  }
+
+  function drawThing(t) {
+    ctx.save();
+    ctx.translate(t.x, t.y);
+    if (t.type === 'apple') {
+      ctx.fillStyle = '#ff5a5f';
+      ctx.beginPath(); ctx.arc(0, 2, t.r, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,255,0.35)';
+      ctx.beginPath(); ctx.arc(-4, -2, 4, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = '#6b3d1f'; ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.moveTo(0, -t.r + 2); ctx.lineTo(1, -t.r - 5); ctx.stroke();
+      ctx.fillStyle = '#4fc27a';
+      ctx.beginPath(); ctx.ellipse(6, -t.r - 2, 6, 3, -0.5, 0, Math.PI * 2); ctx.fill();
+    } else {
+      ctx.rotate(t.spin);
+      ctx.fillStyle = '#c9c4e0';
+      ctx.beginPath();
+      const n = 7;
+      for (let i = 0; i < n; i++) {
+        const a = (i / n) * Math.PI * 2;
+        const rr = t.r * (0.82 + 0.18 * Math.sin(i * 2.3));
+        ctx.lineTo(Math.cos(a) * rr, Math.sin(a) * rr);
+      }
+      ctx.closePath(); ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,255,0.5)';
+      ctx.beginPath(); ctx.arc(-t.r * 0.3, -t.r * 0.3, t.r * 0.25, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function draw() {
+    drawBackground();
+    for (const t of things) drawThing(t);
+    drawPlayer();
+    if (state === 'playing') {
+      ctx.fillStyle = '#f3efff';
+      ctx.font = '500 20px "JetBrains Mono", ui-monospace, monospace';
+      ctx.textAlign = 'right';
+      ctx.fillText(Math.floor(score), W - 14, 30);
+    }
+  }
+
+  let last = performance.now();
+  function frame(now) {
+    const dt = Math.min(0.05, (now - last) / 1000);
+    last = now;
+    if (state === 'playing' && focused) update(dt);
+    draw();
+    ui.left.classList.toggle('on', held.left || touchHeld.left);
+    ui.right.classList.toggle('on', held.right || touchHeld.right);
+    ui.now.textContent = Math.floor(score);
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+</script>
+</html>

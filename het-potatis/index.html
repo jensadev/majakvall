@@ -1,0 +1,544 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Het potatis</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@400;700;800&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+  /* Layout: ett spelbord sett ovanifrån med spelarna i en sexhörning (som brädan), panel till höger.
+     Ett enda medvetet utseende: grönt spelbordsfilt och glödande potatis, samma i ljust och mörkt tema. */
+  :root {
+    --felt: #123c3a;
+    --felt-hi: #1b524e;
+    --ink: #f4f1e8;
+    --muted: #a9c3bd;
+    --panel: #0f3230;
+    --line: #2a615b;
+    --potato: #d9a35b;
+    --fire: #ff7a2f;
+    --display: "Lilita One", "Arial Rounded MT Bold", system-ui, sans-serif;
+    --body: "Nunito", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+    color-scheme: dark;
+  }
+  html, body { background: var(--felt); color: var(--ink); }
+  body {
+    font-family: var(--body);
+    font-size: 15px;
+    line-height: 1.5;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    padding-block: 20px 32px;
+  }
+  .wrap { max-width: 1060px; margin: 0 auto; display: grid; gap: 16px; }
+  header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 16px; }
+  h1 {
+    font-family: var(--display); font-weight: 400;
+    font-size: clamp(30px, 6vw, 48px); line-height: 1; margin: 0;
+    color: var(--potato); text-wrap: balance;
+  }
+  header p { margin: 0; color: var(--muted); max-width: 60ch; }
+
+  .layout { display: grid; grid-template-columns: minmax(0, 1fr) 290px; gap: 16px; align-items: start; }
+  @media (max-width: 780px) { .layout { grid-template-columns: minmax(0, 1fr); } }
+
+  .stage {
+    position: relative; border-radius: 16px; overflow: hidden;
+    border: 2px solid var(--line); background: var(--felt-hi);
+    touch-action: manipulation; user-select: none; -webkit-user-select: none;
+  }
+  .stage:focus-visible { outline: 3px solid var(--potato); outline-offset: 3px; }
+  canvas { display: block; width: 100%; height: auto; aspect-ratio: 640 / 520; max-width: 100%; cursor: pointer; }
+
+  .overlay {
+    position: absolute; inset: 0; display: grid; place-content: center; justify-items: center;
+    gap: 10px; text-align: center; padding: 20px; background: rgba(8, 28, 27, 0.78);
+  }
+  .overlay h2 { font-family: var(--display); font-weight: 400; font-size: clamp(26px, 6vw, 42px); margin: 0; color: var(--potato); }
+  .overlay p { margin: 0; max-width: 36ch; }
+  .overlay .hint { color: var(--muted); font-size: 13px; }
+
+  aside { display: grid; gap: 12px; min-width: 0; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px; display: grid; gap: 10px; min-width: 0; }
+  .card h3 { margin: 0; font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); font-weight: 800; }
+  .card ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
+  .card ul b { color: var(--potato); }
+
+  .field { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 8px; font-size: 14px; }
+  select, input[type=text] {
+    font: inherit; color: var(--ink); background: var(--felt);
+    border: 1px solid var(--line); border-radius: 8px; padding: 5px 8px; min-width: 0;
+  }
+  select:focus-visible, input:focus-visible, button:focus-visible { outline: 2px solid var(--potato); outline-offset: 2px; }
+  .names { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .names label { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 6px; font-family: var(--mono); font-size: 13px; }
+  .names .dot { width: 12px; height: 12px; border-radius: 50%; }
+  .names input { width: 100%; }
+  .check { display: flex; gap: 8px; align-items: center; font-size: 14px; }
+  .check input { accent-color: var(--potato); }
+  .last { font-family: var(--mono); font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
+  .last b { color: var(--ink); font-weight: 500; }
+  button {
+    font: inherit; font-weight: 800; cursor: pointer; background: transparent; color: var(--ink);
+    border: 2px solid var(--line); border-radius: 10px; padding: 8px 12px;
+  }
+  button:hover { border-color: var(--potato); }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Het potatis</h1>
+    <p>Ju längre du håller potatisen, desto fler poäng. Men poängen är bara dina när du kastar vidare. Smäller den i din hand förlorar du dem.</p>
+  </header>
+
+  <div class="layout">
+    <div class="stage" id="stage" tabindex="0" aria-label="Spelbord. Spelare 1 till 6 kastar med tangent 1 till 6.">
+      <canvas id="game" width="640" height="520"></canvas>
+      <div class="overlay" id="overlay">
+        <h2 id="ov-title">Klicka här först</h2>
+        <p id="ov-text">Spelet måste vara markerat för att ta emot tangenter från fruktkontrollen.</p>
+        <p class="hint" id="ov-hint">Rör sedan en frukt för att börja.</p>
+      </div>
+    </div>
+
+    <aside>
+      <section class="card" aria-label="Så spelar ni">
+        <h3>Så spelar ni</h3>
+        <ul>
+          <li>Har du potatisen? <b>Rör din frukt</b> för att kasta den vidare.</li>
+          <li>Poängen tickar upp medan du håller. De sparas när du kastar.</li>
+          <li>Ju längre du håller, desto mer gnistrar stubinen. Och desto troligare är det att den smäller.</li>
+          <li>Först till målet vinner.</li>
+        </ul>
+        <div class="last">Senaste tangent: <b id="last-key">ingen än</b></div>
+      </section>
+
+      <section class="card" aria-label="Inställningar">
+        <h3>Inställningar</h3>
+        <label class="field" for="set-count">Antal spelare
+          <select id="set-count">
+            <option>2</option><option>3</option><option>4</option><option>5</option><option selected>6</option>
+          </select></label>
+        <label class="field" for="set-goal">Spela till
+          <select id="set-goal">
+            <option value="200">200 poäng</option>
+            <option value="300" selected>300 poäng</option>
+            <option value="500">500 poäng</option>
+          </select></label>
+        <label class="field" for="set-fuse">Stubin
+          <select id="set-fuse">
+            <option value="3">Kort</option>
+            <option value="4" selected>Normal</option>
+            <option value="5.5">Lång</option>
+          </select></label>
+        <label class="field" for="set-target">Kasta till
+          <select id="set-target">
+            <option value="next" selected>Nästa spelare</option>
+            <option value="random">Någon slumpad</option>
+          </select></label>
+        <label class="check" for="set-sound"><input type="checkbox" id="set-sound" checked> Ljud</label>
+        <div class="names" id="names"></div>
+        <button type="button" id="back">Tillbaka till spelet</button>
+      </section>
+    </aside>
+  </div>
+</div>
+
+<script>
+(() => {
+  const W = 640, H = 520, CX = 320, CY = 262, RING = 182, SEAT = 40;
+  const COLORS = ['#ff6b6b', '#4dabf7', '#ffd43b', '#69db7c', '#da77f2', '#ff922b'];
+  const canvas = document.getElementById('game');
+  const ctx = canvas.getContext('2d');
+  const stage = document.getElementById('stage');
+  const ov = {
+    root: document.getElementById('overlay'),
+    title: document.getElementById('ov-title'),
+    text: document.getElementById('ov-text'),
+    hint: document.getElementById('ov-hint'),
+  };
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // ---------- Inställningar ----------
+  const el = id => document.getElementById(id);
+  const cfg = { count: 6, goal: 300, fuse: 4, target: 'next', sound: true };
+  const names = ['Spelare 1', 'Spelare 2', 'Spelare 3', 'Spelare 4', 'Spelare 5', 'Spelare 6'];
+
+  const namesBox = el('names');
+  names.forEach((n, i) => {
+    const lab = document.createElement('label');
+    lab.htmlFor = 'name-' + i;
+    lab.innerHTML = '<span class="dot" style="background:' + COLORS[i] + '"></span>';
+    const inp = document.createElement('input');
+    inp.type = 'text'; inp.id = 'name-' + i; inp.value = n; inp.maxLength = 12;
+    inp.setAttribute('aria-label', 'Namn på spelare ' + (i + 1));
+    inp.addEventListener('input', () => { names[i] = inp.value.trim() || 'Spelare ' + (i + 1); });
+    lab.appendChild(inp);
+    namesBox.appendChild(lab);
+  });
+  function showNameFields() {
+    [...namesBox.children].forEach((lab, i) => { lab.hidden = i >= cfg.count; });
+  }
+
+  el('set-count').addEventListener('change', e => { cfg.count = Number(e.target.value); showNameFields(); toReady(); });
+  el('set-goal').addEventListener('change', e => { cfg.goal = Number(e.target.value); });
+  el('set-fuse').addEventListener('change', e => { cfg.fuse = Number(e.target.value); });
+  el('set-target').addEventListener('change', e => { cfg.target = e.target.value; });
+  el('set-sound').addEventListener('change', e => { cfg.sound = e.target.checked; });
+  el('back').addEventListener('click', () => stage.focus());
+  showNameFields();
+
+  // ---------- Ljud ----------
+  let audio = null;
+  function initAudio() {
+    if (audio) return;
+    try { audio = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { audio = null; }
+  }
+  function playThrow() {
+    if (!audio || !cfg.sound) return;
+    const o = audio.createOscillator(), g = audio.createGain(), t = audio.currentTime;
+    o.type = 'triangle';
+    o.frequency.setValueAtTime(300, t);
+    o.frequency.exponentialRampToValueAtTime(900, t + 0.18);
+    g.gain.setValueAtTime(0.15, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.22);
+    o.connect(g).connect(audio.destination);
+    o.start(t); o.stop(t + 0.25);
+  }
+  function playBoom() {
+    if (!audio || !cfg.sound) return;
+    const t = audio.currentTime, len = audio.sampleRate * 0.9;
+    const buf = audio.createBuffer(1, len, audio.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2.5);
+    const src = audio.createBufferSource(), f = audio.createBiquadFilter(), g = audio.createGain();
+    src.buffer = buf;
+    f.type = 'lowpass';
+    f.frequency.setValueAtTime(1800, t);
+    f.frequency.exponentialRampToValueAtTime(120, t + 0.8);
+    g.gain.value = 0.9;
+    src.connect(f).connect(g).connect(audio.destination);
+    src.start(t);
+  }
+
+  // ---------- Spelets tillstånd ----------
+  // phase: 'ready' | 'flying' | 'holding' | 'boom' | 'won'
+  let phase = 'ready', focused = false;
+  let banked, holder, holdT, unsaved, flight, boomT, landedAt, lastPhaseChange, winner, boomInfo;
+  const pressed = new Set();
+  const flash = Array(6).fill(0);
+  let particles = [];
+
+  function seatPos(i) {
+    const a = -Math.PI / 2 + i * (Math.PI * 2 / cfg.count);
+    return { x: CX + Math.cos(a) * RING, y: CY + Math.sin(a) * RING };
+  }
+  function potatoSpot(i) {
+    const s = seatPos(i);
+    return { x: s.x + (CX - s.x) * 0.36, y: s.y + (CY - s.y) * 0.36 };
+  }
+
+  function newGame() {
+    banked = Array(6).fill(0);
+    winner = -1;
+    boomInfo = null;
+    particles = [];
+    throwTo(-1, Math.floor(Math.random() * cfg.count));
+  }
+  function toReady() {
+    phase = 'ready';
+    banked = Array(6).fill(0);
+    holder = -1;
+    unsaved = 0;
+    showOverlay();
+  }
+  toReady();
+
+  function setPhase(p) { phase = p; lastPhaseChange = performance.now(); showOverlay(); }
+
+  function throwTo(from, to) {
+    flight = { from, to, t: 0 };
+    holder = -1;
+    setPhase('flying');
+    playThrow();
+  }
+
+  // Risken att den smäller (per sekund) växer med hur länge samma person håller
+  function hazard(t) { return Math.pow(t / cfg.fuse, 2); }
+  function pointsFor(t) { return Math.floor(10 * t * t); }
+
+  function pickTarget(from) {
+    if (cfg.target === 'next') return (from + 1) % cfg.count;
+    let to;
+    do { to = Math.floor(Math.random() * cfg.count); } while (to === from);
+    return to;
+  }
+
+  // ---------- Inmatning ----------
+  function playerFromEvent(e) {
+    const m = /^(?:Digit|Numpad)([1-6])$/.exec(e.code);
+    if (m) return Number(m[1]) - 1;
+    if (/^[1-6]$/.test(e.key)) return Number(e.key) - 1;
+    return -1;
+  }
+
+  function press(p) {
+    if (p < 0 || p >= cfg.count) return;
+    flash[p] = 1;
+    if (!focused) return;
+    const now = performance.now();
+    if (phase === 'ready' || (phase === 'won' && now - lastPhaseChange > 1500)) { newGame(); return; }
+    if (phase === 'holding' && p === holder && now - landedAt > 150) {
+      banked[p] += unsaved;
+      unsaved = 0;
+      if (banked[p] >= cfg.goal) { winner = p; setPhase('won'); return; }
+      throwTo(p, pickTarget(p));
+    }
+  }
+
+  window.addEventListener('keydown', e => {
+    el('last-key').textContent = e.key === ' ' ? 'mellanslag' : e.key;
+    const p = playerFromEvent(e);
+    if (p < 0 && e.key !== ' ') return;
+    if (e.target.tagName === 'INPUT') return;
+    e.preventDefault();
+    if (p >= 0) pressed.add(p);
+    if (e.repeat) return;
+    if (p >= 0) press(p);
+    else if (phase === 'ready' || phase === 'won') press(0);
+  });
+  window.addEventListener('keyup', e => { const p = playerFromEvent(e); if (p >= 0) pressed.delete(p); });
+  window.addEventListener('blur', () => pressed.clear());
+
+  // Klick på en spelare fungerar som att röra frukten (bra för att testa utan bräda)
+  stage.addEventListener('pointerdown', e => {
+    initAudio();
+    if (audio && audio.state === 'suspended') audio.resume();
+    stage.focus();
+    const r = canvas.getBoundingClientRect();
+    const x = (e.clientX - r.left) * (W / r.width), y = (e.clientY - r.top) * (H / r.height);
+    for (let i = 0; i < cfg.count; i++) {
+      const s = seatPos(i);
+      if ((x - s.x) ** 2 + (y - s.y) ** 2 < (SEAT + 8) ** 2) { press(i); return; }
+    }
+    if (phase === 'ready') press(0);
+  });
+  stage.addEventListener('focus', () => { focused = true; showOverlay(); });
+  stage.addEventListener('blur', () => { focused = false; pressed.clear(); showOverlay(); });
+
+  function showOverlay() {
+    if (!focused) {
+      ov.root.hidden = false;
+      const midGame = phase === 'holding' || phase === 'flying' || phase === 'boom';
+      ov.title.textContent = midGame ? 'Pausat' : 'Klicka här först';
+      ov.text.textContent = 'Spelet måste vara markerat för att ta emot tangenter från fruktkontrollen.';
+      ov.hint.textContent = midGame ? 'Klicka på spelbordet för att fortsätta.' : 'Rör sedan en frukt för att börja.';
+      return;
+    }
+    if (phase === 'ready') {
+      ov.root.hidden = false;
+      ov.title.textContent = 'Redo?';
+      ov.text.textContent = 'Sätt er runt brädan med varsin frukt. Spelare 1 har platta 1, spelare 2 har platta 2 och så vidare.';
+      ov.hint.textContent = 'Rör en frukt för att börja. Du kan också klicka på en spelare.';
+    } else if (phase === 'won') {
+      ov.root.hidden = false;
+      ov.title.textContent = names[winner] + ' vann!';
+      ov.text.textContent = 'Med ' + banked[winner] + ' poäng.';
+      ov.hint.textContent = 'Rör en frukt för att spela igen.';
+    } else {
+      ov.root.hidden = true;
+    }
+  }
+
+  // ---------- Uppdatering ----------
+  function update(dt) {
+    const now = performance.now();
+    if (phase === 'flying') {
+      flight.t += dt / 0.45;
+      if (flight.t >= 1) {
+        holder = flight.to; holdT = 0; unsaved = 0; landedAt = now;
+        setPhase('holding');
+      }
+    } else if (phase === 'holding') {
+      holdT += dt;
+      unsaved = pointsFor(holdT);
+      if (Math.random() < hazard(holdT) * dt) explode();
+    } else if (phase === 'boom') {
+      boomT += dt;
+      if (boomT > 2.4) throwTo(-1, Math.floor(Math.random() * cfg.count));
+    }
+    for (const p of particles) { p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 220 * dt; p.life -= dt; }
+    particles = particles.filter(p => p.life > 0);
+    for (let i = 0; i < 6; i++) flash[i] = Math.max(0, flash[i] - dt * 3);
+  }
+
+  function explode() {
+    boomInfo = { player: holder, lost: unsaved };
+    const at = potatoSpot(holder);
+    for (let i = 0; i < (reduceMotion ? 20 : 70); i++) {
+      const a = Math.random() * Math.PI * 2, v = 80 + Math.random() * 320;
+      particles.push({
+        x: at.x, y: at.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 60,
+        life: 0.6 + Math.random() * 0.9, r: 2 + Math.random() * 5,
+        c: ['#ff7a2f', '#ffd43b', '#d9a35b', '#fff3bf'][i % 4],
+      });
+    }
+    unsaved = 0;
+    holder = -1;
+    boomT = 0;
+    setPhase('boom');
+    playBoom();
+  }
+
+  // ---------- Ritning ----------
+  function drawTable() {
+    ctx.fillStyle = '#1b524e';
+    ctx.fillRect(0, 0, W, H);
+    const g = ctx.createRadialGradient(CX, CY, 20, CX, CY, 320);
+    g.addColorStop(0, 'rgba(255,255,255,0.06)');
+    g.addColorStop(1, 'rgba(0,0,0,0.25)');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, W, H);
+    // sexhörning som brädan
+    ctx.strokeStyle = 'rgba(169,195,189,0.25)';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([6, 8]);
+    ctx.beginPath();
+    for (let i = 0; i < 6; i++) {
+      const a = -Math.PI / 2 + i * Math.PI / 3;
+      ctx.lineTo(CX + Math.cos(a) * 70, CY + Math.sin(a) * 70);
+    }
+    ctx.closePath();
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  function drawSeat(i) {
+    const s = seatPos(i);
+    const isHolder = i === holder && phase === 'holding';
+    const glow = Math.max(flash[i], pressed.has(i) ? 1 : 0);
+    if (glow > 0) {
+      ctx.strokeStyle = 'rgba(255,255,255,' + (0.25 + 0.6 * glow) + ')';
+      ctx.lineWidth = 6;
+      ctx.beginPath(); ctx.arc(s.x, s.y, SEAT + 7, 0, Math.PI * 2); ctx.stroke();
+    }
+    ctx.fillStyle = COLORS[i];
+    ctx.beginPath(); ctx.arc(s.x, s.y, SEAT, 0, Math.PI * 2); ctx.fill();
+    if (isHolder) {
+      ctx.strokeStyle = '#fff3bf'; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.arc(s.x, s.y, SEAT - 4, 0, Math.PI * 2); ctx.stroke();
+    }
+    ctx.fillStyle = '#0f2524';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.font = '500 22px "JetBrains Mono", ui-monospace, monospace';
+    ctx.fillText(banked[i], s.x, s.y + 1);
+    // tangentnummer
+    ctx.fillStyle = '#0f3230';
+    ctx.beginPath(); ctx.arc(s.x + SEAT * 0.72, s.y - SEAT * 0.72, 12, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#f4f1e8';
+    ctx.font = '500 13px "JetBrains Mono", ui-monospace, monospace';
+    ctx.fillText(i + 1, s.x + SEAT * 0.72, s.y - SEAT * 0.72 + 1);
+    // namn
+    // namn ovanför de övre platserna, under de nedre
+    const nameY = s.y < CY - 10 ? s.y - SEAT - 14 : s.y + SEAT + 16;
+    ctx.fillStyle = '#f4f1e8';
+    ctx.font = '800 15px Nunito, system-ui, sans-serif';
+    ctx.fillText(names[i], s.x, nameY);
+  }
+
+  function drawPotato(x, y, risk, t) {
+    const wob = reduceMotion ? 0 : Math.min(6, risk * 5);
+    const ox = Math.sin(t * 40) * wob, oy = Math.cos(t * 33) * wob * 0.6;
+    ctx.save();
+    ctx.translate(x + ox, y + oy);
+    ctx.rotate(-0.3);
+    // glöd
+    if (risk > 0.05) {
+      const g = ctx.createRadialGradient(0, 0, 10, 0, 0, 60);
+      g.addColorStop(0, 'rgba(255,122,47,' + Math.min(0.7, risk * 0.5) + ')');
+      g.addColorStop(1, 'rgba(255,122,47,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(0, 0, 60, 0, Math.PI * 2); ctx.fill();
+    }
+    const heat = Math.min(1, risk * 0.6);
+    const r = Math.round(217 + (255 - 217) * heat), gr = Math.round(163 - 70 * heat), b = Math.round(91 - 50 * heat);
+    ctx.fillStyle = 'rgb(' + r + ',' + gr + ',' + b + ')';
+    ctx.beginPath(); ctx.ellipse(0, 0, 30, 21, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = 'rgba(90,55,20,0.45)';
+    for (const [px, py, pr] of [[-12, -6, 2.5], [8, -9, 2], [14, 5, 2.5], [-4, 8, 2], [-18, 4, 1.8]]) {
+      ctx.beginPath(); ctx.arc(px, py, pr, 0, Math.PI * 2); ctx.fill();
+    }
+    // stubin
+    ctx.strokeStyle = '#3d2b1f'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(22, -12); ctx.quadraticCurveTo(34, -26, 30, -36); ctx.stroke();
+    ctx.restore();
+    // gnistor
+    const sparks = reduceMotion ? 2 : 2 + Math.floor(risk * 10);
+    const fx = x + ox + 30 * Math.cos(-0.3) - (-36) * Math.sin(-0.3);
+    const fy = y + oy + 30 * Math.sin(-0.3) + (-36) * Math.cos(-0.3);
+    for (let i = 0; i < sparks; i++) {
+      const a = Math.random() * Math.PI * 2, d = Math.random() * (6 + risk * 14);
+      ctx.fillStyle = Math.random() < 0.5 ? '#ffd43b' : '#ff7a2f';
+      ctx.fillRect(fx + Math.cos(a) * d - 1.5, fy + Math.sin(a) * d - 1.5, 3, 3);
+    }
+  }
+
+  function draw(now) {
+    drawTable();
+    for (let i = 0; i < cfg.count; i++) drawSeat(i);
+    const t = now / 1000;
+
+    if (phase === 'holding') {
+      const p = potatoSpot(holder);
+      drawPotato(p.x, p.y, hazard(holdT), t);
+      ctx.fillStyle = '#fff3bf';
+      ctx.textAlign = 'center';
+      ctx.font = '400 30px "Lilita One", system-ui, sans-serif';
+      ctx.fillText('+' + unsaved, CX, CY);
+      ctx.fillStyle = 'rgba(244,241,232,0.7)';
+      ctx.font = '700 13px Nunito, system-ui, sans-serif';
+      ctx.fillText(names[holder] + ' håller', CX, CY + 26);
+    } else if (phase === 'flying') {
+      const from = flight.from < 0 ? { x: CX, y: CY } : potatoSpot(flight.from);
+      const to = potatoSpot(flight.to);
+      const k = Math.min(1, flight.t), e = k * k * (3 - 2 * k);
+      const x = from.x + (to.x - from.x) * e, y = from.y + (to.y - from.y) * e - Math.sin(k * Math.PI) * 60;
+      drawPotato(x, y, 0, t);
+    } else if (phase === 'boom' && boomInfo) {
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#ff7a2f';
+      ctx.font = '400 46px "Lilita One", system-ui, sans-serif';
+      ctx.fillText('PANG!', CX, CY - 8);
+      ctx.fillStyle = '#f4f1e8';
+      ctx.font = '700 15px Nunito, system-ui, sans-serif';
+      ctx.fillText(names[boomInfo.player] + ' förlorade ' + boomInfo.lost + ' poäng', CX, CY + 26);
+    }
+
+    for (const p of particles) {
+      ctx.globalAlpha = Math.max(0, Math.min(1, p.life * 1.5));
+      ctx.fillStyle = p.c;
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    ctx.textAlign = 'left';
+    ctx.fillStyle = 'rgba(244,241,232,0.6)';
+    ctx.font = '700 13px Nunito, system-ui, sans-serif';
+    ctx.fillText('Först till ' + cfg.goal, 14, 24);
+  }
+
+  let last = performance.now();
+  function frame(now) {
+    const dt = Math.min(0.05, (now - last) / 1000);
+    last = now;
+    if (focused) update(dt);
+    draw(now);
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+</script>
+</html>
