@@ -1,11 +1,8 @@
-# Ljuspistolen: skjut ankor med en ljussensor i ett pappersrör
-# Avtryckaren är en krokodilklämma på röret. Ljussensorn i röret är siktet.
+# Ljuspistolen: skjut ankor med ett pappersrör
+# Avtryckaren är en krokodilklämma på röret. Röret är siktet.
 #
-# Så fungerar det (precis som Nintendos Duck Hunt från 1984):
-#   1. Du rör avtryckaren. Brädan säger till spelet: PANG!
-#   2. Spelet gör hela skärmen svart. Brädan mäter hur mörkt det är.
-#   3. Spelet ritar en vit ruta där anden är. Brädan mäter igen.
-#   4. Blev det mycket ljusare? Då pekade röret på anden. TRÄFF!
+# Hur kan spelet veta om du träffade? Se mysteriet i README:n.
+# Svaret står i koden längre ner, om du vågar läsa den!
 
 import board, time, touchio, analogio, usb_hid
 

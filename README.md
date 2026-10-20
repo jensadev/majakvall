@@ -67,8 +67,36 @@ desto troligare är det att den smäller. Vågar du?
 
 ## Andjakten
 
-Precis som Nintendos ljuspistol från 1984. När du skjuter blir skärmen svart, sedan ritas
-en vit ruta där anden är. Pekar röret på anden ser ljussensorn att det blev ljusare. Träff!
+### Ett mysterium från 1984
+
+1984 släppte Nintendo spelet *Duck Hunt*. Man sköt ankor på tv:n med en plastpistol,
+och spelet visste om man träffade. Men pistolen hade bara en sladd till spelkonsolen,
+inte till tv:n. Den kunde inte se var på skärmen den pekade, och tv:n kunde inte
+känna var pistolen pekade.
+
+**Hur visste spelet att du träffade?**
+
+Du bygger samma sorts pistol här. Försök lista ut hur den fungerar!
+
+<details>
+<summary>Ledtråd 1</summary>
+
+Titta noga på skärmen precis när du skjuter.
+</details>
+
+<details>
+<summary>Ledtråd 2</summary>
+
+Vad sitter längst in i ditt pappersrör? Vad kan den känna av?
+</details>
+
+<details>
+<summary>Ledtråd 3</summary>
+
+Varför blir skärmen svart *först*? Vad skulle hända om den inte gjorde det?
+</details>
+
+### Så bygger du pistolen
 
 1. Sätt ett pappersrör (en toarulle) över ljussensorn. Bygg en avtryckare: fäst en krokodilklämma från platta 1 på röret, där du lätt når den med fingret.
 2. Kopiera koden i [`ljuspistol/brada.py`](ljuspistol/brada.py) till IDE:t och klicka på **Run code**.
@@ -92,7 +120,7 @@ Skärmen blinkar svart och vitt vid varje skott. Tänk på det om någon är lju
 
 Platta 7 och 8 fungerar inte på våra brädor (motstånden saknas).
 
-## För läraren
+## Felsökning och hjälp
 
 - Spelen fungerar också offline: `index.html` i respektive mapp går att öppna direkt i
   webbläsaren eller med Live Server.
