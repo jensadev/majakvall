@@ -5,6 +5,7 @@ låtsas då vara ett tangentbord. Här finns två spel:
 
 - **Akta huvudet** (`akta-huvudet/`): en spelare, två frukter. Gå åt vänster och höger och undvik hagel.
 - **Het potatis** (`het-potatis/`): upp till sex spelare med varsin frukt. Kasta potatisen vidare innan den smäller.
+- **Andjakten** (`ljuspistol/`): sikta med brädans ljussensor i ett pappersrör och skjut med en avtryckare du bygger själv.
 
 ## Det här behöver du
 
@@ -54,6 +55,20 @@ Reglerna: medan du håller potatisen tickar poängen upp, men de sparas först n
 vidare (rör din frukt). Smäller den i din hand förlorar du poängen. Ju längre du håller,
 desto troligare är det att den smäller. Vågar du?
 
+## Andjakten
+
+Precis som Nintendos ljuspistol från 1984. När du skjuter blir skärmen svart, sedan ritas
+en vit ruta där anden är. Pekar röret på anden ser ljussensorn att det blev ljusare. Träff!
+
+1. Sätt ett pappersrör (en toarulle) över ljussensorn. Bygg en avtryckare: fäst en krokodilklämma från platta 1 på röret, där du lätt når den med fingret.
+2. Kopiera koden i [`ljuspistol/brada.py`](ljuspistol/brada.py) till IDE:t och klicka på **Run code**.
+3. Kalibrera avtryckaren (steg 2 i koden).
+4. Öppna spelet (`ljuspistol/index.html`), kryssa i **Övningsläge**, klicka på spelet och tryck **Helskärm**.
+5. Skjut på anden och bredvid den. Titta på "skillnad" i utdatafönstret och kalibrera `TRAFF_GRANS` (steg 3 i koden).
+6. Stäng av övningsläget och jaga!
+
+Skärmen blinkar svart och vitt vid varje skott. Tänk på det om någon är ljuskänslig.
+
 ## Plattorna
 
 | Platta | Pinne |
@@ -80,5 +95,11 @@ Platta 7 och 8 fungerar inte på våra brädor (motstånden saknas).
 - Om spelet inte reagerar: titta i spelets panel ("Vad spelet tar emot" eller ringen runt
   spelarna). Lyser den fungerar brädan och problemet är fokus. Lyser den inte, titta efter
   `RÖRD` i IDE:ts utdatafönster.
+- Ljuspistolen: brädan skickar pil upp (skott) och sedan Page Up (träff) eller Page Down (miss).
+  De tangenterna skriver inget, så koden i IDE:t förstörs inte om fokus hamnar fel.
+  Sensorn är långsam: under 200 ms vitt ger den inget pålitligt utslag, därför visas den
+  vita rutan i 400 ms. Testverktyg finns i `ljuspistol/ljustest.html` och `ljuspistol/ljustest.py`.
+  Mätt vid testet: med "Ljusruta: dubbelt så stor" träffar den på 50 till 60 cm. Ströljus
+  förstör mätningen: en lysdiod från en annan bräda som lyste in i röret minskade räckvidden från 50 till 60 cm till 40 cm.
 - Spelen går att testa utan bräda: piltangenterna i Akta huvudet, siffertangenterna 1 till 6
-  eller klick på spelarna i Het potatis.
+  eller klick på spelarna i Het potatis, och musklick i Andjakten.
