@@ -1,11 +1,21 @@
 # Fruktkontrollen
 
 Bygg en spelkontroll av frukt! Open Minds-brädan känner när du rör en frukt och
-låtsas då vara ett tangentbord. Här finns två spel:
+låtsas då vara ett tangentbord. Här finns tre spel:
 
 - **Akta huvudet** (`akta-huvudet/`): en spelare, två frukter. Gå åt vänster och höger och undvik hagel.
 - **Het potatis** (`het-potatis/`): upp till sex spelare med varsin frukt. Kasta potatisen vidare innan den smäller.
 - **Andjakten** (`ljuspistol/`): sikta med brädans ljussensor i ett pappersrör och skjut med en avtryckare du bygger själv.
+
+## Länkar
+
+- [Open Minds IDE](https://tom-vulpes.github.io/OpenMindsWebInterface/ide.html), här kör du koden på brädan
+- [Akta huvudet](https://claude.ai/artifact/XpB2zxLibqZ7yQYeHBNYFJ)
+- [Het potatis](https://claude.ai/artifact/9oitoLyEVkQq8iWeqx6JVG)
+- [Andjakten](https://claude.ai/artifact/MvLKM7y4TYraK373eKCdab) och [testbild för ljussensorn](https://claude.ai/artifact/L27o5A83wbgWEBE4nMr63B)
+
+Koden till brädan hittar du i mapparna här ovanför. Öppna filen, klicka på kopieringsknappen
+(*Copy raw file*) uppe till höger och klistra in den i IDE:t.
 
 ## Det här behöver du
 
@@ -32,7 +42,7 @@ låtsas då vara ett tangentbord. Här finns två spel:
 
 ### 3. Spela
 
-1. Öppna spelet (länken får du av läraren, eller öppna `akta-huvudet/index.html`).
+1. Öppna [Akta huvudet](https://claude.ai/artifact/XpB2zxLibqZ7yQYeHBNYFJ).
 2. **Klicka på spelplanen**, annars får spelet inga tangenter.
 3. Rör en frukt för att börja.
 
@@ -48,7 +58,7 @@ låtsas då vara ett tangentbord. Här finns två spel:
 1. Sätt er runt brädan. Spelare 1 klämmer fast sin frukt på platta 1, spelare 2 på platta 2 och så vidare.
 2. Kopiera koden i [`het-potatis/brada.py`](het-potatis/brada.py) till IDE:t, ändra `ANTAL_SPELARE` och klicka på **Run code**.
 3. Kalibrera allas frukter. Följ stegen överst i koden. Varje spelare har sin egen gräns i `GRANS`.
-4. Öppna spelet (`het-potatis/index.html`), välj samma antal spelare och **klicka på spelbordet**.
+4. Öppna [Het potatis](https://claude.ai/artifact/9oitoLyEVkQq8iWeqx6JVG), välj samma antal spelare och **klicka på spelbordet**.
 5. Rör en frukt för att börja.
 
 Reglerna: medan du håller potatisen tickar poängen upp, men de sparas först när du kastar
@@ -63,7 +73,7 @@ en vit ruta där anden är. Pekar röret på anden ser ljussensorn att det blev 
 1. Sätt ett pappersrör (en toarulle) över ljussensorn. Bygg en avtryckare: fäst en krokodilklämma från platta 1 på röret, där du lätt når den med fingret.
 2. Kopiera koden i [`ljuspistol/brada.py`](ljuspistol/brada.py) till IDE:t och klicka på **Run code**.
 3. Kalibrera avtryckaren (steg 2 i koden).
-4. Öppna spelet (`ljuspistol/index.html`), kryssa i **Övningsläge**, klicka på spelet och tryck **Helskärm**.
+4. Öppna [Andjakten](https://claude.ai/artifact/MvLKM7y4TYraK373eKCdab), kryssa i **Övningsläge**, klicka på spelet och tryck **Helskärm**.
 5. Skjut på anden och bredvid den. Titta på "skillnad" i utdatafönstret och kalibrera `TRAFF_GRANS` (steg 3 i koden).
 6. Stäng av övningsläget och jaga!
 
@@ -84,6 +94,8 @@ Platta 7 och 8 fungerar inte på våra brädor (motstånden saknas).
 
 ## För läraren
 
+- Spelen fungerar också offline: `index.html` i respektive mapp går att öppna direkt i
+  webbläsaren eller med Live Server.
 - Plattorna är kapacitiva, så ingen jordsladd behövs. Kroppen räcker.
 - Brädan mäter frukternas startvärde när programmet startar. Kläm fast frukterna först,
   starta sedan om (Run code igen). Byter man frukt mitt i behöver man starta om.
