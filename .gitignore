@@ -1,2 +1,6 @@
 __pycache__/
 .DS_Store
+
+# Byggs av Quarto ur bildspel/*/index.qmd
+bildspel/*/index.html
+bildspel/*/index_files/

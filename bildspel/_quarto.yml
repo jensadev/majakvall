@@ -1,0 +1,6 @@
+project:
+  type: default
+  render:
+    - "*/index.qmd"
+
+lang: sv

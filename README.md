@@ -77,24 +77,7 @@ känna var pistolen pekade.
 **Hur visste spelet att du träffade?**
 
 Du bygger samma sorts pistol här. Försök lista ut hur den fungerar!
-
-<details>
-<summary>Ledtråd 1</summary>
-
-Titta noga på skärmen precis när du skjuter.
-</details>
-
-<details>
-<summary>Ledtråd 2</summary>
-
-Vad sitter längst in i ditt pappersrör? Vad kan den känna av?
-</details>
-
-<details>
-<summary>Ledtråd 3</summary>
-
-Varför blir skärmen svart *först*? Vad skulle hända om den inte gjorde det?
-</details>
+Ledtrådarna kommer på tavlan.
 
 ### Så bygger du pistolen
 

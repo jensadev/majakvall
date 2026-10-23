@@ -1,0 +1,169 @@
+---
+pagetitle: Fruktkontrollen
+footer: Fruktkontrollen · github.com/jensadev/majakvall
+format: skola-revealjs
+---
+
+## Fruktkontrollen {.cover}
+
+::: lead
+Bygg en spelkontroll av frukt.
+:::
+
+::: card
+[**I kväll**]{.accent}
+
+1. Gör en banan till en knapp.
+2. Spela mot klassen.
+3. Lös ett mysterium från 1984.
+:::
+
+## Hur kan en banan vara en knapp?
+
+::: question
+Brädan har ingen knapp. Hur vet den att du rör frukten?
+:::
+
+::: {.card .fragment}
+Brädan laddar plattan om och om igen och mäter hur lång tid det tar. Rör du frukten blir frukten och din kropp en del av det som ska laddas: [det tar längre tid och talet stiger]{.accent}.
+
+Stiger det tillräckligt säger brädan till datorn att någon tryckte på en tangent.
+:::
+
+::: notes
+Visa live innan fragmentet: kör akta-huvudet/1_las_varden.py med en banan på platta 1 och låt någon röra den. Låt dem gissa först.
+
+Kapacitans: kroppen ökar kapacitansen, så laddningstiden (raw_value i touchio) blir längre. Ingen jordsladd behövs. Följdfråga: varför ger en blöt frukt större utslag än en torr?
+:::
+
+## Så jobbar ni
+
+:::: {.columns}
+
+::: {.column width="62%"}
+::: card
+Grupper
+: Två eller tre per bräda.
+
+1\. Akta huvudet
+: Börja här. Här lär ni er kalibrera.
+
+2\. Het potatis
+: Slå ihop er med gruppen bredvid.
+
+3\. Andjakten
+: Bygg en ljuspistol.
+:::
+:::
+
+::: {.column width="32%"}
+![](repo-qr.svg){width="100%"}
+:::
+
+::::
+
+::: lead
+Allt ni behöver står i README:n på [github.com/jensadev/majakvall]{.accent}
+:::
+
+::: notes
+Den här bilden kan stå uppe första halvan av passet.
+
+Blanda gärna grupperna till Het potatis så att de inte bara slår ihop sig med kompisarna. Två grupper delar en bräda och en dator.
+
+Andjakten blinkar svart och vitt vid varje skott. Fråga om någon är ljuskänslig innan någon börjar.
+:::
+
+## Fastnat?
+
+:::: {.columns}
+
+::: {.column width="62%"}
+::: card
+Frukten reagerar inte
+: Tryck in klämman i fruktköttet och klicka på **Run code** igen.
+
+Spelet reagerar inte
+: Klicka på spelet. Lyser panelen när du rör frukten? Då är det fokus.
+
+Inget `RÖRD` i IDE:t
+: Kalibrera om. Frukterna ska sitta fast innan du startar.
+
+Platta 7 och 8
+: Fungerar inte på våra brädor.
+:::
+:::
+
+::: {.column width="32%"}
+![](repo-qr.svg){width="100%"}
+:::
+
+::::
+
+::: {.small .muted}
+Mer felsökning längst ner i README:n.
+:::
+
+::: notes
+Den här bilden står uppe resten av passet, tills det är dags för mysteriet.
+
+Brädan mäter startvärdet när programmet startar: frukterna ska sitta fast först, sedan Run code. Byter man frukt måste man starta om. Plattan kan inte mäta över 10000, en stor blöt frukt kan slå i taket.
+
+Plattorna och pinnarna: 1 GP2, 2 GP3, 3 GP4, 4 GP5, 5 GP18, 6 GP19.
+
+Ljuspistolen: ströljus förstör. En lysdiod från en annan bräda som lyste in i röret sänkte räckvidden från 50 till 60 cm till 40 cm. Med 10 till 15 brädor i rummet: håll ljuspistolerna isär och vänd dem bort från grannarnas brädor.
+:::
+
+## Ett mysterium från 1984 {.cover}
+
+::: lead
+Nintendos *Duck Hunt*: du sköt ankor på tv:n med en plastpistol, och spelet visste om du träffade.
+:::
+
+::: card
+Pistolen hade bara en sladd, till spelkonsolen. [Inte till tv:n.]{.accent}
+
+Den kunde inte se var på skärmen den pekade. Tv:n kunde inte känna var pistolen pekade.
+:::
+
+::: notes
+Ta upp mysteriet när de första grupperna har en fungerande ljuspistol, eller mitt i passet om ingen har kommit dit än.
+:::
+
+## Hur visste spelet att du träffade?
+
+::: question
+Ni bygger samma sorts pistol. Lista ut hur den fungerar!
+:::
+
+::: {.card .fragment}
+**Ledtråd 1:** Titta noga på skärmen precis när du skjuter.
+:::
+
+::: {.card .fragment}
+**Ledtråd 2:** Vad sitter längst in i ditt pappersrör? Vad kan den känna av?
+:::
+
+::: {.card .fragment}
+**Ledtråd 3:** Varför blir skärmen svart *först*? Vad skulle hända om den inte gjorde det?
+:::
+
+::: notes
+Klicka fram en ledtråd i taget, med några minuter emellan. Ledtrådarna finns inte i README:n, bara här.
+:::
+
+## Hur visste spelet det? {.closing}
+
+::: lead
+Vad kom ni fram till?
+:::
+
+::: {.card .fragment}
+Skärmen blir svart, sedan visas en vit ruta [precis där anden är]{.accent}. Sensorn i röret ser om det blev ljust.
+
+Svart först gör att lampor i rummet inte räknas som träff: det är skillnaden mellan svart och vitt som mäts.
+:::
+
+::: notes
+Låt några grupper förklara innan svaret visas. I spelet: svart i 300 ms, vit ruta i 400 ms.
+:::

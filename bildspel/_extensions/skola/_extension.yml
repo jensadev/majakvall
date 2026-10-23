@@ -1,0 +1,20 @@
+title: Skola
+author: Jens Andreasson
+version: 0.1.0
+quarto-required: ">=1.4.0"
+contributes:
+  formats:
+    revealjs:
+      theme: skola.scss
+      filters:
+        - layouts.lua
+      width: 1920
+      height: 1080
+      margin: 0
+      center: false
+      slide-number: c/t
+      transition: fade
+      controls: false
+      progress: false
+      hash: true
+      embed-resources: true

@@ -56,6 +56,7 @@
     position: absolute; inset: 0; display: grid; place-content: center; justify-items: center;
     gap: 10px; text-align: center; padding: 20px; background: rgba(8, 28, 27, 0.78);
   }
+  .overlay[hidden] { display: none; }
   .overlay h2 { font-family: var(--display); font-weight: 400; font-size: clamp(26px, 6vw, 42px); margin: 0; color: var(--potato); }
   .overlay p { margin: 0; max-width: 36ch; }
   .overlay .hint { color: var(--muted); font-size: 13px; }
@@ -90,7 +91,7 @@
 <div class="wrap">
   <header>
     <h1>Het potatis</h1>
-    <p>Ju längre du håller potatisen, desto fler poäng. Men poängen är bara dina när du kastar vidare. Smäller den i din hand förlorar du dem.</p>
+    <p>Ju längre du håller potatisen, desto fler poäng. Men poängen är bara dina när du kastar vidare. Och smäller den i din hand blir det dyrt.</p>
   </header>
 
   <div class="layout">
@@ -109,6 +110,7 @@
         <ul>
           <li>Har du potatisen? <b>Rör din frukt</b> för att kasta den vidare.</li>
           <li>Poängen tickar upp medan du håller. De sparas när du kastar.</li>
+          <li id="rule-boom"></li>
           <li>Ju längre du håller, desto mer gnistrar stubinen. Och desto troligare är det att den smäller.</li>
           <li>Först till målet vinner.</li>
         </ul>
@@ -126,12 +128,19 @@
             <option value="200">200 poäng</option>
             <option value="300" selected>300 poäng</option>
             <option value="500">500 poäng</option>
+            <option value="1000">1000 poäng</option>
           </select></label>
         <label class="field" for="set-fuse">Stubin
           <select id="set-fuse">
             <option value="3">Kort</option>
             <option value="4" selected>Normal</option>
             <option value="5.5">Lång</option>
+          </select></label>
+        <label class="field" for="set-boom">När den smäller
+          <select id="set-boom">
+            <option value="minus">Osparade blir minus</option>
+            <option value="half">Tappa hälften</option>
+            <option value="all" selected>Tappa allt</option>
           </select></label>
         <label class="field" for="set-target">Kasta till
           <select id="set-target">
@@ -163,7 +172,13 @@
 
   // ---------- Inställningar ----------
   const el = id => document.getElementById(id);
-  const cfg = { count: 6, goal: 300, fuse: 4, target: 'next', sound: true };
+  const cfg = { count: 6, goal: 300, fuse: 4, target: 'next', boom: 'all', sound: true };
+  const BOOM_RULES = {
+    minus: 'Smäller den i din hand dras poängen du inte hunnit spara av från dina sparade. Du kan hamna på minus.',
+    half: 'Smäller den i din hand tappar du de osparade poängen och hälften av dina sparade.',
+    all: 'Smäller den i din hand tappar du alla dina poäng, även de sparade.',
+  };
+  function showBoomRule() { el('rule-boom').textContent = BOOM_RULES[cfg.boom]; }
   const names = ['Spelare 1', 'Spelare 2', 'Spelare 3', 'Spelare 4', 'Spelare 5', 'Spelare 6'];
 
   const namesBox = el('names');
@@ -186,9 +201,11 @@
   el('set-goal').addEventListener('change', e => { cfg.goal = Number(e.target.value); });
   el('set-fuse').addEventListener('change', e => { cfg.fuse = Number(e.target.value); });
   el('set-target').addEventListener('change', e => { cfg.target = e.target.value; });
+  el('set-boom').addEventListener('change', e => { cfg.boom = e.target.value; showBoomRule(); });
   el('set-sound').addEventListener('change', e => { cfg.sound = e.target.checked; });
   el('back').addEventListener('click', () => stage.focus());
   showNameFields();
+  showBoomRule();
 
   // ---------- Ljud ----------
   let audio = null;
@@ -375,7 +392,10 @@
   }
 
   function explode() {
-    boomInfo = { player: holder, lost: unsaved };
+    const fromBank = cfg.boom === 'all' ? banked[holder]
+      : cfg.boom === 'half' ? Math.floor(banked[holder] / 2) : unsaved;
+    banked[holder] -= fromBank;
+    boomInfo = { player: holder, lost: cfg.boom === 'minus' ? fromBank : unsaved + fromBank };
     const at = potatoSpot(holder);
     for (let i = 0; i < (reduceMotion ? 20 : 70); i++) {
       const a = Math.random() * Math.PI * 2, v = 80 + Math.random() * 320;
